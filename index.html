@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A1018">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Anker">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A1018; --panel:#111A26; --panel2:#16212F; --line:#22303F;
+  --brass:#C8A25C; --brass-dim:#7E6636;
+  --paper:#E9E6DE; --mute:#7E8FA6;
+  --up:#6FA97C; --down:#C0605A; --warn:#D8A13A;
+  --serif:"Newsreader",Georgia,serif;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--paper);font-family:var(--sans)}
+body{padding-bottom:calc(72px + var(--safe-b));overscroll-behavior-y:contain}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:var(--brass);text-decoration:none}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(10,16,24,.92);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  padding:calc(10px + var(--safe-t)) 16px 10px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.mark{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:.09em;color:var(--brass)}
+.tag{font-size:11px;color:var(--mute);letter-spacing:.04em}
+.status{margin-top:5px;font-size:11.5px;color:var(--mute);display:flex;gap:12px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mute);flex:none}
+.dot.live{background:var(--up)}
+.dot.err{background:var(--down)}
+
+main{padding:0 16px}
+.view{display:none}
+.view.on{display:block}
+
+/* nu-strip: the hero */
+.nu{margin:18px 0 8px;padding:16px 0 18px;border-bottom:1px solid var(--line)}
+.nu h1{font-family:var(--serif);font-size:26px;line-height:1.24;font-weight:500;margin:0 0 12px}
+.nu .sub{font-size:13px;color:var(--mute);line-height:1.5;margin:0}
+.counts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.cnt{font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:2px;color:var(--mute)}
+.cnt b{color:var(--paper);font-weight:600}
+
+/* filters */
+.filters{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;margin:0 -16px;
+  padding-left:16px;padding-right:16px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:11.5px;padding:6px 11px;border:1px solid var(--line);
+  border-radius:2px;color:var(--mute);white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--brass-dim);color:var(--brass);background:rgba(200,162,92,.07)}
+
+/* feed items */
+.item{border-bottom:1px solid var(--line);padding:16px 0 16px 13px;position:relative}
+.item::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:2px;background:var(--line)}
+.item[data-cat="MARKT"]::before{background:#4E7FB8}
+.item[data-cat="NL WONEN"]::before{background:var(--brass)}
+.item[data-cat="GEOPOLITIEK"]::before{background:var(--down)}
+.item[data-cat="MACRO"]::before{background:#8E76B8}
+.item[data-cat="NEDERLAND"]::before{background:#5D9E8F}
+.item[data-cat="CRYPTO"]::before{background:#B8894E}
+.item.new::before{box-shadow:0 0 0 2px rgba(200,162,92,.18)}
+.meta{display:flex;gap:8px;align-items:center;font-size:10.5px;color:var(--mute);margin-bottom:7px;flex-wrap:wrap}
+.meta .cat{color:var(--paper);letter-spacing:.06em;font-weight:500}
+.meta .flag{color:var(--warn)}
+.item h2{font-family:var(--serif);font-size:19px;line-height:1.32;font-weight:500;margin:0 0 7px}
+.snip{font-size:13.5px;line-height:1.55;color:var(--mute);margin:0}
+.body{margin-top:14px;font-size:14.5px;line-height:1.68;font-family:var(--serif)}
+.body p{margin:0 0 12px}
+.means{margin-top:14px;padding:13px 14px;background:var(--panel);border-left:2px solid var(--brass-dim);border-radius:0 2px 2px 0}
+.means h3{font-size:11px;color:var(--brass);margin:0 0 6px;font-weight:600;letter-spacing:.04em}
+.means p{font-size:13.5px;line-height:1.6;margin:0;color:var(--paper)}
+.acts{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--mute)}
+.acts button{padding:2px 0;border-bottom:1px solid var(--line)}
+
+/* lessons */
+.lswitch{display:flex;gap:0;margin:18px 0 4px;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.lswitch button{flex:1;padding:10px;font-size:13px;color:var(--mute)}
+.lswitch button[aria-pressed="true"]{background:var(--panel2);color:var(--paper)}
+.lesson{padding:22px 0 8px}
+.lesson .kicker{font-size:11px;color:var(--brass);margin-bottom:10px}
+.lesson h1{font-family:var(--serif);font-size:25px;line-height:1.26;font-weight:500;margin:0 0 16px}
+.lesson .txt{font-family:var(--serif);font-size:16px;line-height:1.72}
+.lesson .txt p{margin:0 0 15px}
+.lesson .txt strong{color:var(--brass);font-weight:600}
+.archive{margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
+.archive h3{font-size:11.5px;color:var(--mute);margin:0 0 10px;font-weight:500}
+.arow{display:block;width:100%;text-align:left;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.arow span{display:block;font-size:10.5px;color:var(--mute);margin-top:3px}
+
+/* settings */
+.set{padding:20px 0 40px}
+.grp{margin-bottom:26px}
+.grp h3{font-size:12px;color:var(--brass);margin:0 0 4px;font-weight:600}
+.grp .hint{font-size:12.5px;color:var(--mute);line-height:1.55;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row label{font-size:14px}
+input[type=text],input[type=password],select,textarea{
+  background:var(--panel);border:1px solid var(--line);color:var(--paper);
+  padding:10px 11px;border-radius:2px;font-size:14px;width:100%;font-family:var(--sans)}
+textarea{min-height:96px;line-height:1.5;font-size:12.5px}
+.sw{position:relative;width:44px;height:25px;flex:none;background:var(--panel2);border:1px solid var(--line);border-radius:13px}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;
+  background:var(--mute);transition:.16s}
+.sw[aria-pressed="true"]{background:rgba(200,162,92,.2);border-color:var(--brass-dim)}
+.sw[aria-pressed="true"]::after{left:21px;background:var(--brass)}
+.btn{display:block;width:100%;padding:13px;border:1px solid var(--brass-dim);color:var(--brass);
+  border-radius:2px;font-size:14px;text-align:center;margin-top:12px}
+.btn.ghost{border-color:var(--line);color:var(--mute)}
+
+/* tabbar */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;
+  background:rgba(10,16,24,.95);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding-bottom:var(--safe-b)}
+nav button{flex:1;padding:12px 4px 13px;font-size:10.5px;color:var(--mute);letter-spacing:.03em}
+nav button[aria-pressed="true"]{color:var(--brass)}
+nav .ic{display:block;font-family:var(--serif);font-size:17px;margin-bottom:3px;line-height:1}
+nav .badge{display:inline-block;min-width:15px;padding:0 4px;background:var(--brass);color:var(--ink);
+  border-radius:8px;font-size:9.5px;font-weight:600;line-height:15px;margin-left:3px}
+
+.empty{padding:44px 0;text-align:center;color:var(--mute);font-size:13.5px;line-height:1.6}
+.empty b{display:block;color:var(--paper);font-family:var(--serif);font-size:17px;font-weight:500;margin-bottom:8px}
+.spin{display:inline-block;width:11px;height:11px;border:1.5px solid var(--line);
+  border-top-color:var(--brass);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(84px + var(--safe-b));z-index:40;
+  background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--brass);
+  padding:12px 14px;font-size:13px;border-radius:2px;display:none}
+.toast.on{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="mark">ANKER</span><span class="tag" id="tagline">signaal · lessen · vertrouwen</span></div>
+  <div class="status"><span class="dot" id="dot"></span><span id="stat">Nog niet ververst</span></div>
+</header>
+
+<main>
+
+<!-- ============ SIGNAAL ============ -->
+<section class="view on" id="v-feed">
+  <div class="nu">
+    <h1 id="nuLine">Ververs om te zien wat er speelt.</h1>
+    <p class="sub" id="nuSub">Anker leest doorlopend Nederlandse en internationale bronnen over markten, wonen, macro en geopolitiek, en vertaalt wat er binnenkomt naar wat het voor jou betekent.</p>
+    <div class="counts" id="counts"></div>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="feed"></div>
+</section>
+
+<!-- ============ LESSEN ============ -->
+<section class="view" id="v-lessons">
+  <div class="lswitch">
+    <button id="tab-morning" aria-pressed="true">Ochtend · 08:00</button>
+    <button id="tab-evening" aria-pressed="false">Avond · 22:00</button>
+  </div>
+  <div id="lessonBox"></div>
+</section>
+
+<!-- ============ INSTELLINGEN ============ -->
+<section class="view set" id="v-set">
+
+  <div class="grp">
+    <h3>Meldingen op dit toestel</h3>
+    <p class="hint">Werkt zolang Anker open of recent geopend is. Voor meldingen met de app dicht en het scherm uit heb je de server-route nodig; zie de README.</p>
+    <button class="btn" id="btnNotif">Meldingen aanzetten</button>
+    <div class="row"><label>Alleen bij hoge impact</label><button class="sw" id="sw-high" aria-pressed="false"></button></div>
+    <div class="row"><label>Ochtendles 08:00</label><button class="sw" id="sw-am" aria-pressed="true"></button></div>
+    <div class="row"><label>Avondles 22:00</label><button class="sw" id="sw-pm" aria-pressed="true"></button></div>
+  </div>
+
+  <div class="grp">
+    <h3>Duiding door Claude</h3>
+    <p class="hint">Zonder sleutel toont Anker koppen met een vaste duiding per categorie. Met je eigen API-sleutel schrijft Claude per bericht een samenvatting en wat het betekent, en genereert hij de dagelijkse lessen. De sleutel blijft op dit toestel.</p>
+    <div class="row" style="display:block;border:none;padding-bottom:6px">
+      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    </div>
+    <div class="row"><label>Model</label>
+      <select id="model" style="width:auto">
+        <option value="claude-sonnet-5">Sonnet 5</option>
+        <option value="claude-opus-5">Opus 5</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+      </select>
+    </div>
+    <div class="row"><label>Lengte samenvatting</label>
+      <select id="len" style="width:auto">
+        <option value="kort">Kort (~1 min)</option>
+        <option value="normaal" selected>Normaal (~2 min)</option>
+        <option value="lang">Lang (~3 min)</option>
+      </select>
+    </div>
+    <div class="row"><label>Duiden bij elke verversing</label><button class="sw" id="sw-auto" aria-pressed="true"></button></div>
+  </div>
+
+  <div class="grp">
+    <h3>Verversen</h3>
+    <div class="row"><label>Interval terwijl app open is</label>
+      <select id="poll" style="width:auto">
+        <option value="2">2 min</option><option value="5" selected>5 min</option>
+        <option value="15">15 min</option><option value="0">Uit</option>
+      </select>
+    </div>
+    <button class="btn ghost" id="btnRefresh">Nu verversen</button>
+  </div>
+
+  <div class="grp">
+    <h3>Bronnen</h3>
+    <p class="hint">Eén RSS- of Atom-feed per regel. Achter een pipe mag je een categorie zetten: MARKT, NL WONEN, GEOPOLITIEK, MACRO, NEDERLAND of CRYPTO. Zonder categorie bepaalt Anker hem zelf op basis van de inhoud.</p>
+    <textarea id="feeds" spellcheck="false"></textarea>
+    <button class="btn ghost" id="btnFeeds">Bronnen opslaan</button>
+    <button class="btn ghost" id="btnReset">Terug naar standaardbronnen</button>
+  </div>
+
+  <div class="grp">
+    <h3>Opslag</h3>
+    <p class="hint">Alles staat lokaal in je browser. Verwijderen wist gelezen-status, lesarchief en je sleutel.</p>
+    <button class="btn ghost" id="btnWipe">Alle lokale gegevens wissen</button>
+  </div>
+
+</section>
+</main>
+
+<nav>
+  <button id="n-feed" aria-pressed="true"><span class="ic">◆</span>Signaal<span class="badge" id="badge" style="display:none">0</span></button>
+  <button id="n-lessons" aria-pressed="false"><span class="ic">§</span>Lessen</button>
+  <button id="n-set" aria-pressed="false"><span class="ic">≡</span>Instellingen</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─────────── storage (falls back to memory when localStorage is blocked) ─────────── */
+const MEM={};
+const S={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return k in MEM?MEM[k]:d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){MEM[k]=v}},
+  del(k){try{localStorage.removeItem(k)}catch(e){delete MEM[k]}}
+};
+
+/* ─────────── default sources ─────────── */
+const DEFAULT_FEEDS = [
+ "https://feeds.nos.nl/nosnieuwseconomie|MARKT",
+ "https://feeds.nos.nl/nosnieuwsbuitenland|GEOPOLITIEK",
+ "https://feeds.nos.nl/nosnieuwspolitiek|NEDERLAND",
+ "https://feeds.nos.nl/nosnieuwsalgemeen|NEDERLAND",
+ "https://www.nu.nl/rss/Economie|MARKT",
+ "https://www.dnb.nl/rss/nieuws.aspx|MACRO",
+ "https://www.ecb.europa.eu/rss/press.html|MACRO",
+ "https://www.federalreserve.gov/feeds/press_all.xml|MACRO",
+ "https://www.cbs.nl/nl-nl/rss|NEDERLAND",
+ "https://feeds.content.dowjones.io/public/rss/mw_topstories|MARKT",
+ "https://www.cnbc.com/id/100003114/device/rss/rss.html|MARKT",
+ "https://news.google.com/rss/search?q=huizenmarkt+OR+woningmarkt+when:2d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN",
+ "https://news.google.com/rss/search?q=huurmarkt+OR+huurprijs+OR+huurwet+when:2d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN",
+ "https://news.google.com/rss/search?q=hypotheekrente+OR+Kadaster+OR+NVM+when:3d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN",
+ "https://news.google.com/rss/search?q=ECB+rente+OR+inflatie+eurozone+when:2d&hl=nl&gl=NL&ceid=NL:nl|MACRO",
+ "https://news.google.com/rss/search?q=goudprijs+OR+dollar+OR+staatsschuld+when:2d&hl=nl&gl=NL&ceid=NL:nl|MACRO",
+ "https://news.google.com/rss/search?q=bitcoin+OR+solana+OR+crypto+when:1d&hl=nl&gl=NL&ceid=NL:nl|CRYPTO",
+ "https://news.google.com/rss/search?q=oorlog+OR+aanval+OR+sancties+when:1d&hl=nl&gl=NL&ceid=NL:nl|GEOPOLITIEK"
+].join("\n");
+
+const CATS=["MARKT","NL WONEN","GEOPOLITIEK","MACRO","NEDERLAND","CRYPTO"];
+
+const KW={
+ "NL WONEN":["huizenmarkt","woningmarkt","huurprijs","huurmarkt","huurwoning","koopwoning","hypotheek","makelaar","kadaster","nvm","woningtekort","verhuurder","huurder","huurverhoging","woningcorporatie","erfpacht","bouwvergunning","stikstof","nieuwbouw","wet betaalbare huur","puntensysteem","woz","overdrachtsbelasting","box 3","vastgoed"],
+ "MACRO":["inflatie","rente","centrale bank","ecb","federal reserve","fed ","dnb","imf","goud","obligatie","staatsschuld","begroting","dollar","euro","valuta","recessie","cpi","werkloosheidscijfer","bbp","monetair"],
+ "MARKT":["aandeel","aandelen","beurs","index","aex","s&p","nasdaq","dow","koers","winstwaarschuwing","kwartaalcijfers","overname","fusie","ipo","olieprijs","futures","belegger","dividend"],
+ "GEOPOLITIEK":["oorlog","aanval","raket","invasie","sancties","militair","leger","conflict","staakt-het-vuren","navo","grens","terreur","coup","luchtaanval","drone","escalatie","handelsoorlog","importheffing","tarieven"],
+ "CRYPTO":["bitcoin","ethereum","solana","crypto","memecoin","stablecoin","blockchain","token","mica"],
+ "NEDERLAND":["kabinet","tweede kamer","eerste kamer","minister","den haag","gemeente","rijksoverheid","cbs","belastingdienst","coalitie","verkiezing","prinsjesdag"]
+};
+const HIGH=["oorlog","invasie","aanval","noodtoestand","crash","kelder","rentebesluit","renteverlaging","renteverhoging","faillissement","wetsvoorstel","aangenomen","verbod","record","ingestort","sancties","staakt-het-vuren","kabinet gevallen","recessie"];
+
+const MEANS={
+ "MARKT":"Koersnieuws is bijna altijd al verwerkt tegen de tijd dat je het leest. Kijk naar de richting van de verwachting, niet naar de beweging van vandaag: verandert dit iets aan winstgroei, rente of risicobereidheid over maanden?",
+ "NL WONEN":"Vraag je af welke kant dit de vier variabelen op duwt die jouw werk raken: huurniveau, leegstandsduur, financierbaarheid en regeldruk. Wetgeving werkt met vertraging maar bijna nooit terug.",
+ "GEOPOLITIEK":"De directe marktimpact van conflictnieuws is meestal kort en overdreven. Wat blijft hangen zijn energieprijzen, handelsroutes en defensie-uitgaven. Beoordeel of dit escaleert of alleen luider klinkt.",
+ "MACRO":"Dit is het kanaal dat je hypotheek, je waarderingen en je beleggingen tegelijk raakt. Rente en inflatie doen meer met vastgoed dan welke lokale ontwikkeling ook.",
+ "NEDERLAND":"Politiek nieuws vertaalt zich pas naar geld via wetgeving en begroting. Zoek de datum waarop iets ingaat; dat is het enige dat telt voor planning.",
+ "CRYPTO":"Volatiel en nieuwsgevoelig, maar zelden structureel. Scheid regelgeving (blijvend) van prijsbewegingen (ruis)."
+};
+
+/* ─────────── state ─────────── */
+let ST={items:[],filter:null,view:"feed",lesson:"morning",cur:null,timer:null};
+
+/* ─────────── helpers ─────────── */
+const $=id=>document.getElementById(id);
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const strip=h=>{const d=document.createElement("div");d.innerHTML=h||"";return (d.textContent||"").replace(/\s+/g," ").trim()};
+const key=t=>(t||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim().slice(0,70);
+function ago(ts){const m=Math.round((Date.now()-ts)/6e4);
+  if(m<1)return"nu";if(m<60)return m+" min";const h=Math.round(m/60);
+  if(h<24)return h+" uur";return Math.round(h/24)+" dag"}
+function toast(msg,ms=3200){const t=$("toast");t.textContent=msg;t.classList.add("on");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),ms)}
+
+/* ─────────── fetching ─────────── */
+const PROXIES=[
+  u=>u,
+  u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),
+  u=>"https://corsproxy.io/?url="+encodeURIComponent(u),
+  u=>"https://r.jina.ai/"+u
+];
+async function grab(url){
+  for(const p of PROXIES){
+    try{
+      const c=new AbortController(); const t=setTimeout(()=>c.abort(),12000);
+      const r=await fetch(p(url),{signal:c.signal}); clearTimeout(t);
+      if(!r.ok) continue;
+      const txt=await r.text();
+      if(txt && /<(rss|feed|rdf:RDF)/i.test(txt)) return txt;
+    }catch(e){}
+  }
+  return null;
+}
+function parseFeed(xml,srcCat,srcUrl){
+  const doc=new DOMParser().parseFromString(xml,"text/xml");
+  if(doc.querySelector("parsererror")) return [];
+  const src=strip(doc.querySelector("channel > title, feed > title")?.textContent)||new URL(srcUrl).hostname.replace(/^www\./,"");
+  const nodes=[...doc.querySelectorAll("item, entry")].slice(0,25);
+  return nodes.map(n=>{
+    const title=strip(n.querySelector("title")?.textContent);
+    let link=n.querySelector("link")?.getAttribute("href")||strip(n.querySelector("link")?.textContent)||"";
+    const desc=strip(n.querySelector("description, summary, content")?.textContent).slice(0,900);
+    const dRaw=n.querySelector("pubDate, published, updated, date")?.textContent;
+    const ts=dRaw?Date.parse(dRaw)||Date.now():Date.now();
+    return {title,link,desc,ts,src,cat:srcCat};
+  }).filter(x=>x.title);
+}
+function classify(it){
+  const hay=(it.title+" "+it.desc).toLowerCase();
+  let best=it.cat||"NEDERLAND", score=it.cat?1:0;
+  for(const c of CATS){
+    let s=0; for(const k of KW[c]) if(hay.includes(k)) s++;
+    if(c===it.cat) s+=1.5;
+    if(s>score){score=s;best=c}
+  }
+  it.cat=best;
+  it.high=HIGH.some(k=>hay.includes(k));
+  return it;
+}
+async function refresh(silent){
+  $("dot").className="dot"; $("stat").innerHTML='<span class="spin"></span> Bronnen lezen…';
+  const lines=(S.get("anker.feeds",DEFAULT_FEEDS)).split("\n").map(l=>l.trim()).filter(Boolean);
+  const jobs=lines.map(async l=>{
+    const [u,c]=l.split("|").map(s=>s&&s.trim());
+    const xml=await grab(u); return xml?parseFeed(xml,c,u):[];
+  });
+  const res=await Promise.all(jobs);
+  const seen=S.get("anker.seen",{});
+  const map=new Map();
+  res.flat().forEach(it=>{const k=key(it.title); if(!map.has(k)||map.get(k).ts<it.ts) map.set(k,it)});
+  let items=[...map.values()].map(classify)
+    .sort((a,b)=>b.ts-a.ts).slice(0,120)
+    .map(it=>({...it,id:key(it.title),isNew:!seen[key(it.title)]}));
+
+  const ok=items.length>0;
+  $("dot").className="dot "+(ok?"live":"err");
+  $("stat").textContent = ok
+    ? `${items.length} berichten · bijgewerkt ${new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"})}`
+    : "Geen bronnen bereikbaar. Controleer je verbinding of pas de bronnen aan.";
+
+  const prev=new Map(ST.items.map(i=>[i.id,i]));
+  items.forEach(i=>{const p=prev.get(i.id); if(p){i.body=p.body;i.means=p.means}});
+  ST.items=items;
+  renderFeed();
+
+  if(ok && S.get("anker.auto",true) && S.get("anker.key","")) brief();
+
+  // First ever load: mark everything seen instead of firing 100 notifications.
+  if(ok && !S.get("anker.primed",false)){
+    const seen2={}; items.forEach(i=>seen2[i.id]=Date.now());
+    S.set("anker.seen",seen2); S.set("anker.primed",true);
+    items.forEach(i=>i.isNew=false); renderFeed();
+  } else if(ok){
+    notifyNew(items.filter(i=>i.isNew));
+  }
+}
+
+/* ─────────── Claude briefings ─────────── */
+const WORDS={kort:"ongeveer 110 woorden",normaal:"ongeveer 220 woorden",lang:"ongeveer 420 woorden"};
+async function claude(system,user,maxTok){
+  const k=S.get("anker.key","");
+  if(!k) throw new Error("geen sleutel");
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-api-key":k,
+      "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:S.get("anker.model","claude-sonnet-5"),max_tokens:maxTok||3000,
+      system,messages:[{role:"user",content:user}]})
+  });
+  if(!r.ok){const t=await r.text();throw new Error(t.slice(0,180))}
+  const d=await r.json();
+  return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+}
+async function brief(){
+  const todo=ST.items.filter(i=>!i.body).slice(0,10);
+  if(!todo.length) return;
+  $("stat").innerHTML='<span class="spin"></span> Duiding schrijven…';
+  const sys=`Je bent een nuchtere Nederlandse economieredacteur die schrijft voor één lezer: een 21-jarige ondernemer in Den Haag met een verhuurmakelaarskantoor in opbouw, een futures-handelsaccount en beleggingen in indexfondsen.
+
+Regels:
+- Schrijf Nederlands, direct, zonder opsmuk. Geen uitroeptekens, geen "belangrijk om te weten".
+- Herschrijf volledig in eigen woorden. Citeer nooit uit de bron en volg de zinsbouw van de bron niet.
+- Als de bronsamenvatting te dun is voor een goed verhaal, zeg dat in één zin en vul aan met context die je zelf hebt.
+- Bij "betekenis": wees concreet en durf te zeggen dat iets waarschijnlijk niets betekent. Geen handelsadvies.
+- Antwoord UITSLUITEND met geldige JSON, geen markdown, geen toelichting.`;
+  const usr=`Schrijf per bericht een samenvatting van ${WORDS[S.get("anker.len","normaal")]} en daarna 2 tot 3 zinnen onder de kop "wat dit betekent" toegespitst op de categorie.
+
+Antwoordformaat: {"r":[{"i":0,"s":"samenvatting","m":"betekenis"}, ...]}
+
+Berichten:
+${todo.map((it,n)=>`[${n}] (${it.cat} · ${it.src}) ${it.title}\n${it.desc.slice(0,600)}`).join("\n\n")}`;
+  try{
+    let txt=await claude(sys,usr,4000);
+    txt=txt.replace(/```json|```/g,"").trim();
+    const j=JSON.parse(txt.slice(txt.indexOf("{"),txt.lastIndexOf("}")+1));
+    (j.r||[]).forEach(r=>{const it=todo[r.i]; if(it){it.body=r.s;it.means=r.m}});
+    renderFeed();
+    $("stat").textContent=`${ST.items.length} berichten · geduid ${new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"})}`;
+  }catch(e){
+    $("stat").textContent="Duiding mislukt: "+e.message;
+  }
+}
+
+/* ─────────── render feed ─────────── */
+function renderFeed(){
+  const f=$("filters");
+  if(!f.children.length){
+    f.innerHTML=`<button class="chip" data-c="" aria-pressed="true">Alles</button>`+
+      CATS.map(c=>`<button class="chip" data-c="${c}" aria-pressed="false">${c}</button>`).join("");
+    f.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+      ST.filter=b.dataset.c||null;
+      f.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b));
+      renderFeed();
+    });
+  }
+  const items=ST.items.filter(i=>!ST.filter||i.cat===ST.filter);
+  const nw=ST.items.filter(i=>i.isNew).length;
+  $("badge").style.display=nw?"inline-block":"none"; $("badge").textContent=nw;
+
+  const byCat={}; ST.items.forEach(i=>byCat[i.cat]=(byCat[i.cat]||0)+1);
+  $("counts").innerHTML=CATS.filter(c=>byCat[c]).map(c=>`<span class="cnt">${c} <b>${byCat[c]}</b></span>`).join("");
+  if(ST.items.length){
+    const top=ST.items.find(i=>i.high)||ST.items[0];
+    $("nuLine").textContent=top.title;
+    $("nuSub").textContent=`${nw} nieuw sinds je laatste bezoek · zwaarste categorie nu: ${Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0][0]}`;
+  }
+
+  $("feed").innerHTML = items.length ? items.map(it=>`
+    <article class="item${it.isNew?" new":""}" data-cat="${it.cat}" data-id="${esc(it.id)}">
+      <div class="meta"><span class="cat">${it.cat}</span><span>${esc(it.src)}</span><span>${ago(it.ts)}</span>${it.high?'<span class="flag">zwaar</span>':""}</div>
+      <h2>${esc(it.title)}</h2>
+      ${it.body?"":`<p class="snip">${esc(it.desc.slice(0,190))}${it.desc.length>190?"…":""}</p>`}
+      ${it.body?`<div class="body">${it.body.split(/\n\n+/).map(p=>`<p>${esc(p)}</p>`).join("")}</div>`:""}
+      ${it.means?`<div class="means"><h3>Wat dit betekent</h3><p>${esc(it.means)}</p></div>`:
+        `<div class="means"><h3>Wat dit betekent</h3><p>${esc(MEANS[it.cat])}</p></div>`}
+      <div class="acts">
+        ${it.link?`<a href="${esc(it.link)}" target="_blank" rel="noopener">Bron openen</a>`:""}
+        <button data-act="read">Gelezen</button>
+      </div>
+    </article>`).join("")
+   : `<div class="empty"><b>Nog niets binnen</b>Trek omlaag of tik op verversen in Instellingen. Bij een lege lijst zijn meestal de bronnen niet bereikbaar.</div>`;
+
+  $("feed").querySelectorAll('[data-act="read"]').forEach(b=>b.onclick=e=>{
+    const el=e.target.closest(".item"); const seen=S.get("anker.seen",{});
+    seen[el.dataset.id]=Date.now(); S.set("anker.seen",seen);
+    const it=ST.items.find(i=>i.id===el.dataset.id); if(it)it.isNew=false;
+    el.classList.remove("new"); renderFeed();
+  });
+}
+
+/* ─────────── notifications ─────────── */
+function canNotify(){return "Notification" in window && Notification.permission==="granted"}
+function fire(title,body,tag,url){
+  if(!canNotify())return;
+  const o={body,tag,icon:"icons/icon-192.png",badge:"icons/icon-192.png",data:{url:url||location.href}};
+  navigator.serviceWorker?.ready.then(r=>r.showNotification(title,o)).catch(()=>{try{new Notification(title,o)}catch(e){}});
+}
+function notifyNew(list){
+  if(!canNotify()||!list.length)return;
+  const pool=S.get("anker.high",false)?list.filter(i=>i.high):list;
+  if(!pool.length)return;
+  const pushed=S.get("anker.pushed",{});
+  const fresh=pool.filter(i=>!pushed[i.id]).slice(0,3);
+  fresh.forEach(i=>{fire(`${i.cat} · ${i.src}`,i.title,i.id,i.link);pushed[i.id]=1});
+  if(pool.length>fresh.length) fire("Anker",`Nog ${pool.length-fresh.length} andere berichten binnen.`,"rest");
+  S.set("anker.pushed",pushed);
+}
+
+/* ─────────── lessons ─────────── */
+let CUR=null;
+async function loadCurriculum(){
+  if(CUR)return CUR;
+  try{const r=await fetch("curriculum.json");CUR=await r.json()}catch(e){CUR=null}
+  return CUR;
+}
+function dayIndex(){return Math.floor((Date.now()-Date.UTC(2026,0,1))/864e5)}
+function pickTitle(side){
+  const all=CUR[side].modules.flatMap(m=>m.lessons.map(l=>({m:m.name,t:l})));
+  return all[dayIndex()%all.length];
+}
+function todayKey(side){const d=new Date();return `${side}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
+async function getLesson(side){
+  const arch=S.get("anker.lessons",{});
+  const k=todayKey(side);
+  if(arch[k])return arch[k];
+  await loadCurriculum();
+  if(!CUR)return null;
+  const pick=pickTitle(side);
+  let lesson={title:pick.t,module:pick.m,body:null,date:Date.now(),gen:false};
+  if(S.get("anker.key","")){
+    try{
+      const c=CUR[side];
+      const sys=`Je schrijft één dagelijkse les voor één lezer: een 21-jarige Nederlandse ondernemer die een luxe verhuurmakelaarskantoor opbouwt in de Haaglanden, daarnaast vastgoedbeheer doet en futures handelt.
+
+Domein: ${c.domain}
+Stijl: ${c.voice}
+Overkoepelend thema van de hele reeks: ${CUR.theme.title}. ${CUR.theme.line}
+
+Lengte: 260 tot 340 woorden. Nederlands. Vier tot zes korte alinea's, gescheiden door een lege regel. Geen koppen, geen opsommingstekens, geen inleidende zin die het onderwerp aankondigt. Begin meteen met de inhoud. Sluit af met één alinea die begint met "**Vandaag:**" (ochtend) of "**Let morgen op:**" (avond) en precies één uitvoerbare actie bevat.`;
+      const body=await claude(sys,`Onderwerp: ${pick.t}\nModule: ${pick.m}\nDagdeel: ${side==="morning"?"ochtend":"avond"}`,1200);
+      lesson.body=body.trim();lesson.gen=true;
+    }catch(e){}
+  }
+  if(!lesson.body){
+    const seed=CUR[side].seed[dayIndex()%CUR[side].seed.length];
+    lesson={title:seed.title,module:"Uit de basisreeks",body:seed.body,date:Date.now(),gen:false};
+  }
+  arch[k]=lesson;
+  const keys=Object.keys(arch); if(keys.length>90) delete arch[keys[0]];
+  S.set("anker.lessons",arch);
+  return lesson;
+}
+async function renderLesson(){
+  const box=$("lessonBox");
+  box.innerHTML=`<div class="empty"><span class="spin"></span></div>`;
+  const l=await getLesson(ST.lesson);
+  if(!l){box.innerHTML=`<div class="empty"><b>Lessen niet geladen</b>curriculum.json is niet bereikbaar. Dat bestand hoort naast index.html op je server te staan.</div>`;return}
+  const arch=S.get("anker.lessons",{});
+  const past=Object.entries(arch).filter(([k])=>k.startsWith(ST.lesson)&&k!==todayKey(ST.lesson))
+    .sort((a,b)=>b[1].date-a[1].date).slice(0,20);
+  box.innerHTML=`
+    <article class="lesson">
+      <div class="kicker">${esc(l.module)} · ${new Date().toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long"})}</div>
+      <h1>${esc(l.title)}</h1>
+      <div class="txt">${l.body.split(/\n\n+/).map(p=>`<p>${esc(p).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")}</p>`).join("")}</div>
+    </article>
+    ${past.length?`<div class="archive"><h3>Eerder</h3>${past.map(([k,v])=>
+      `<button class="arow" data-k="${k}">${esc(v.title)}<span>${new Date(v.date).toLocaleDateString("nl-NL",{day:"numeric",month:"short"})}</span></button>`).join("")}</div>`:""}`;
+  box.querySelectorAll(".arow").forEach(b=>b.onclick=()=>{
+    const v=S.get("anker.lessons",{})[b.dataset.k];
+    box.querySelector(".lesson").innerHTML=`<div class="kicker">${esc(v.module)} · ${new Date(v.date).toLocaleDateString("nl-NL",{day:"numeric",month:"long"})}</div>
+      <h1>${esc(v.title)}</h1><div class="txt">${v.body.split(/\n\n+/).map(p=>`<p>${esc(p).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")}</p>`).join("")}</div>`;
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+}
+async function checkLessonTime(){
+  const now=new Date(), h=now.getHours(), sent=S.get("anker.lessonSent",{});
+  for(const [side,hour,on,label] of [["morning",8,"anker.am","Ochtendles"],["evening",22,"anker.pm","Avondles"]]){
+    if(!S.get(on,true))continue;
+    const k=todayKey(side);
+    if(h>=hour && !sent[k]){
+      const l=await getLesson(side);
+      if(l){ sent[k]=1; S.set("anker.lessonSent",sent);
+        fire(`${label} · ${CUR?CUR.theme.title:"Anker"}`, l.title, k); }
+    }
+  }
+}
+
+/* ─────────── views ─────────── */
+function show(v){
+  ST.view=v;
+  ["feed","lessons","set"].forEach(x=>{
+    $("v-"+x).classList.toggle("on",x===v);
+    $("n-"+x).setAttribute("aria-pressed",x===v);
+  });
+  window.scrollTo(0,0);
+  if(v==="lessons")renderLesson();
+}
+["feed","lessons","set"].forEach(v=>$("n-"+v).onclick=()=>show(v));
+$("tab-morning").onclick=()=>{ST.lesson="morning";$("tab-morning").setAttribute("aria-pressed",true);$("tab-evening").setAttribute("aria-pressed",false);renderLesson()};
+$("tab-evening").onclick=()=>{ST.lesson="evening";$("tab-evening").setAttribute("aria-pressed",true);$("tab-morning").setAttribute("aria-pressed",false);renderLesson()};
+
+/* ─────────── settings wiring ─────────── */
+function sw(id,k,d){const b=$(id);b.setAttribute("aria-pressed",S.get(k,d));
+  b.onclick=()=>{const v=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",v);S.set(k,v)}}
+sw("sw-high","anker.high",false); sw("sw-am","anker.am",true);
+sw("sw-pm","anker.pm",true); sw("sw-auto","anker.auto",true);
+
+$("apiKey").value=S.get("anker.key","");
+$("apiKey").onchange=e=>{S.set("anker.key",e.target.value.trim());toast(e.target.value?"Sleutel opgeslagen op dit toestel.":"Sleutel verwijderd.")};
+$("model").value=S.get("anker.model","claude-sonnet-5");
+$("model").onchange=e=>S.set("anker.model",e.target.value);
+$("len").value=S.get("anker.len","normaal");
+$("len").onchange=e=>S.set("anker.len",e.target.value);
+$("poll").value=String(S.get("anker.poll",5));
+$("poll").onchange=e=>{S.set("anker.poll",+e.target.value);startPoll()};
+$("feeds").value=S.get("anker.feeds",DEFAULT_FEEDS);
+$("btnFeeds").onclick=()=>{S.set("anker.feeds",$("feeds").value);toast("Bronnen opgeslagen.");refresh(true)};
+$("btnReset").onclick=()=>{S.set("anker.feeds",DEFAULT_FEEDS);$("feeds").value=DEFAULT_FEEDS;toast("Standaardbronnen hersteld.");refresh(true)};
+$("btnRefresh").onclick=()=>{show("feed");refresh()};
+$("btnWipe").onclick=()=>{["key","seen","pushed","lessons","lessonSent","feeds","primed"].forEach(k=>S.del("anker."+k));
+  $("apiKey").value="";$("feeds").value=DEFAULT_FEEDS;toast("Lokale gegevens gewist.")};
+$("btnNotif").onclick=async()=>{
+  if(!("Notification" in window)){toast("Deze browser ondersteunt geen meldingen. Zet Anker eerst op je beginscherm.");return}
+  const p=await Notification.requestPermission();
+  if(p==="granted"){fire("Anker staat aan","Je krijgt meldingen zolang de app open of recent geopend is.","hello");toast("Meldingen aan.")}
+  else toast("Meldingen geweigerd. Aanpassen kan in de instellingen van je telefoon.");
+};
+
+/* ─────────── polling & lifecycle ─────────── */
+function startPoll(){
+  clearInterval(ST.timer);
+  const m=S.get("anker.poll",5);
+  if(m>0) ST.timer=setInterval(()=>{refresh(true);checkLessonTime()},m*6e4);
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){refresh(true);checkLessonTime()}});
+
+/* pull to refresh */
+let y0=null;
+addEventListener("touchstart",e=>{if(scrollY===0)y0=e.touches[0].clientY},{passive:true});
+addEventListener("touchmove",e=>{if(y0!==null&&e.touches[0].clientY-y0>90){y0=null;refresh()}},{passive:true});
+addEventListener("touchend",()=>y0=null,{passive:true});
+
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+loadCurriculum().then(()=>{ if(CUR) $("tagline").textContent="signaal · lessen · "+CUR.theme.title.toLowerCase(); });
+refresh(); startPoll(); checkLessonTime();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Eén feed per regel. Achter | mag een categorie:
+# MARKT | NL WONEN | GEOPOLITIEK | MACRO | NEDERLAND | CRYPTO
+# Zonder categorie bepaalt Anker hem zelf op basis van de inhoud.
+
+https://feeds.nos.nl/nosnieuwseconomie|MARKT
+https://feeds.nos.nl/nosnieuwsbuitenland|GEOPOLITIEK
+https://feeds.nos.nl/nosnieuwspolitiek|NEDERLAND
+https://feeds.nos.nl/nosnieuwsalgemeen|NEDERLAND
+https://www.nu.nl/rss/Economie|MARKT
+https://www.dnb.nl/rss/nieuws.aspx|MACRO
+https://www.ecb.europa.eu/rss/press.html|MACRO
+https://www.federalreserve.gov/feeds/press_all.xml|MACRO
+https://www.cbs.nl/nl-nl/rss|NEDERLAND
+https://feeds.content.dowjones.io/public/rss/mw_topstories|MARKT
+https://www.cnbc.com/id/100003114/device/rss/rss.html|MARKT
+https://news.google.com/rss/search?q=huizenmarkt+OR+woningmarkt+when:2d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN
+https://news.google.com/rss/search?q=huurmarkt+OR+huurprijs+OR+huurwet+when:2d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN
+https://news.google.com/rss/search?q=hypotheekrente+OR+Kadaster+OR+NVM+when:3d&hl=nl&gl=NL&ceid=NL:nl|NL WONEN
+https://news.google.com/rss/search?q=ECB+rente+OR+inflatie+eurozone+when:2d&hl=nl&gl=NL&ceid=NL:nl|MACRO
+https://news.google.com/rss/search?q=goudprijs+OR+dollar+OR+staatsschuld+when:2d&hl=nl&gl=NL&ceid=NL:nl|MACRO
+https://news.google.com/rss/search?q=bitcoin+OR+solana+OR+crypto+when:1d&hl=nl&gl=NL&ceid=NL:nl|CRYPTO
+https://news.google.com/rss/search?q=oorlog+OR+aanval+OR+sancties+when:1d&hl=nl&gl=NL&ceid=NL:nl|GEOPOLITIEK
