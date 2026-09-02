@@ -61,7 +61,7 @@ KW = {
 }
 
 HIGH = ["oorlog","invasie","aanval","noodtoestand","crash","rentebesluit","renteverlaging","renteverhoging",
-        "faillissement","aangenomen","verbod","recordhoogte","ingestort","sancties","staakt-het-vuren",
+        "faillissement","aangenomen","verbod","ingestort","sancties","staakt-het-vuren",
         "kabinet gevallen","recessie","wetsvoorstel"]
 
 MEANS = {
