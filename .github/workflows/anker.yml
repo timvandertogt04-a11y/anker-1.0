@@ -1,0 +1,64 @@
+name: Anker
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+    - cron: "0 6,7 * * *"
+    - cron: "0 20,21 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "news | lesson-morning | lesson-evening"
+        default: "news"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: anker
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Nieuws
+        if: github.event.schedule == '*/10 * * * *' || github.event.inputs.mode == 'news'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BRIEF_LENGTH: normaal
+          MAX_PUSH: "6"
+        run: python scripts/anker_watch.py news
+
+      - name: Ochtendles
+        if: github.event.schedule == '0 6,7 * * *' || github.event.inputs.mode == 'lesson-morning'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/anker_watch.py lesson --side morning ${{ github.event.inputs.mode == 'lesson-morning' && '--force' || '' }}
+
+      - name: Avondles
+        if: github.event.schedule == '0 20,21 * * *' || github.event.inputs.mode == 'lesson-evening'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/anker_watch.py lesson --side evening ${{ github.event.inputs.mode == 'lesson-evening' && '--force' || '' }}
+
+      - name: Status bewaren
+        run: |
+          git config user.name "anker-bot"
+          git config user.email "anker-bot@users.noreply.github.com"
+          git add state/seen.json
+          git diff --staged --quiet || git commit -m "state: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash || true
+          git push || true
